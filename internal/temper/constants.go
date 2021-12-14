@@ -1,4 +1,4 @@
-package driver
+package temper
 
 const (
 	sysPath = "/sys/bus/usb/devices"
