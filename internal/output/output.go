@@ -5,7 +5,19 @@ import (
 	"fmt"
 )
 
+type OutputDriverConfig struct {
+	InfluxDB InfluxDBConfig
+}
+
+type InfluxDBConfig struct {
+	ServerAddress string
+	Token         string
+	Bucket        string
+	Org           string
+}
+
 type OutputDriver interface {
+	Initialise(config OutputDriverConfig) error
 	PostStats(label, payload string)
 }
 

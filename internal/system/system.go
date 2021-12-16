@@ -48,6 +48,10 @@ func FindDevPaths(devicePath string, devPathsMap map[string]string) ([]string, e
 		keys = append(keys, key)
 	}
 
+	// Dumb solution: For my temper setup, hidraw5 is the usable partition
+	// whilst hidraw4 is set but inactive when posting commands to.
+	// Thus sorting the strings places hidraw5 last which is what works.
+	// This definitely need to be looked deeper into
 	sort.Strings(keys)
 
 	return keys, nil
