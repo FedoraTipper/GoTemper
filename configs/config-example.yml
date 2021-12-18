@@ -1,0 +1,8 @@
+Output: influxdb
+LoggingFile: ./logs/gotemper
+LoggingLevel: debug
+InfluxDB:
+  ServerAddress: https://address.com
+  Token: token
+  Bucket: bucket
+  Org: org

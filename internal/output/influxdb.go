@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
+	configModels "github.com/FedoraTipper/gotemper/internal/models/config"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 )
@@ -14,7 +16,7 @@ type InfluxDBDriver struct {
 	api    *api.WriteAPI
 }
 
-func (i *InfluxDBDriver) Initialise(outputConfig OutputDriverConfig) error {
+func (i *InfluxDBDriver) Initialise(outputConfig configModels.OutputDriverConfig) error {
 	config := outputConfig.InfluxDB
 	client := influxdb2.NewClient(config.ServerAddress, config.Token)
 	writeAPI := client.WriteAPI(config.Org, config.Bucket)
@@ -35,6 +37,18 @@ func (i *InfluxDBDriver) Initialise(outputConfig OutputDriverConfig) error {
 	return nil
 }
 
-func (i *InfluxDBDriver) PostStats(label, payload string) {
-	panic("implement me")
+func (i *InfluxDBDriver) PostStats(label, sublabel string, payload interface{}) {
+	api := *i.api
+
+	go func() {
+		point := influxdb2.NewPointWithMeasurement(label).AddField(sublabel, payload)
+		api.WritePoint(point)
+		api.Flush()
+	}()
+
+	select {
+	case err := <-api.Errors():
+		log.Printf("%v", err)
+		break
+	}
 }

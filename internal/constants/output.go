@@ -1,4 +1,4 @@
-package output
+package constants
 
 type OutputType string
 

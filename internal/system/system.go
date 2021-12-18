@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"sort"
+
+	"github.com/FedoraTipper/gotemper/internal/constants"
 )
 
 type SystemDriver interface {
@@ -16,7 +18,7 @@ type SystemDriver interface {
 }
 
 func GetFileDriver(devPath string) (SystemDriver, error) {
-	if compiledHIDRegex.MatchString(devPath) {
+	if constants.CompiledHIDRegex.MatchString(devPath) {
 		return &HIDRawDriver{}, nil
 	}
 
@@ -31,7 +33,7 @@ func FindDevPaths(devicePath string, devPathsMap map[string]string) ([]string, e
 	}
 
 	for _, entry := range entries {
-		if compiledTTYRegex.MatchString(entry.Name()) || compiledHIDRegex.MatchString(entry.Name()) {
+		if constants.CompiledTTYRegex.MatchString(entry.Name()) || constants.CompiledHIDRegex.MatchString(entry.Name()) {
 			devPathsMap[entry.Name()] = ""
 		} else if entry.IsDir() {
 			_, err := FindDevPaths(path.Join(devicePath, entry.Name()), devPathsMap)

@@ -3,31 +3,23 @@ package output
 import (
 	"errors"
 	"fmt"
+
+	"github.com/FedoraTipper/gotemper/internal/constants"
+	"github.com/FedoraTipper/gotemper/internal/models/config"
 )
 
-type OutputDriverConfig struct {
-	InfluxDB InfluxDBConfig
-}
-
-type InfluxDBConfig struct {
-	ServerAddress string
-	Token         string
-	Bucket        string
-	Org           string
-}
-
 type OutputDriver interface {
-	Initialise(config OutputDriverConfig) error
-	PostStats(label, payload string)
+	Initialise(config config.OutputDriverConfig) error
+	PostStats(label, sublabel string, payload interface{})
 }
 
 func GetOutputDriver(typ string) (OutputDriver, error) {
-	outputType := OutputType(typ)
+	outputType := constants.OutputType(typ)
 
 	switch outputType {
-	case OutputTypeStdOut:
+	case constants.OutputTypeStdOut:
 		return &StdOutDriver{}, nil
-	case OutputTypeInfluxDb:
+	case constants.OutputTypeInfluxDb:
 		return &InfluxDBDriver{}, nil
 	}
 

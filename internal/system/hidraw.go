@@ -6,6 +6,8 @@ import (
 	"log"
 	"path"
 	"syscall"
+
+	"github.com/FedoraTipper/gotemper/internal/constants"
 )
 
 const (
@@ -17,7 +19,7 @@ type HIDRawDriver struct {
 }
 
 func (h *HIDRawDriver) Open(filePath string) error {
-	filePath = path.Join(devPath, filePath)
+	filePath = path.Join(constants.DevPath, filePath)
 	fd, err := syscall.Open(filePath, syscall.O_RDWR|syscall.O_NONBLOCK, fileRWPerm)
 
 	if err != nil {
