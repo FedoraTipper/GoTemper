@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/FedoraTipper/gotemper/internal/config"
+	"github.com/FedoraTipper/gotemper/internal/logger"
 	configModels "github.com/FedoraTipper/gotemper/internal/models/config"
 	"github.com/FedoraTipper/gotemper/internal/output"
 	"github.com/FedoraTipper/gotemper/internal/temper"
 	"github.com/go-co-op/gocron"
+	"go.uber.org/zap"
 )
 
 var (
@@ -63,27 +64,35 @@ func main() {
 		log.Fatalf("%v", configErrs)
 	}
 
+	err := logger.InitGlobalLogger(outputConfig.LoggingFile, outputConfig.LoggingLevel)
+
+	if err != nil {
+		log.Fatalf("Unable to configure logger. Error: %v", err)
+	}
+
 	outputDriver, err := output.GetOutputDriver(outputConfig.Output)
 
 	if err != nil {
-		log.Fatalf("%v", err)
+		zap.S().Fatalf("%v", err)
 	}
 
 	err = outputDriver.Initialise(outputConfig)
 
 	if err != nil {
-		panic(err)
+		zap.S().Fatalf("%v", err)
 	}
 
 	devices, err := temper.FindTemperDevices()
 
 	if err != nil {
-		panic(err)
+		zap.S().Fatalf("%v", err)
+		log.Fatalf("%v", err)
 	}
 
 	if len(devices) == 0 {
-		fmt.Println("No Temper devices found")
-		os.Exit(1)
+		msg := "No Temper devices found"
+		fmt.Println(msg)
+		zap.S().Fatal(msg)
 	} else {
 		fmt.Printf("%v\n", devices)
 	}
@@ -93,7 +102,7 @@ func main() {
 	_, err = scheduler.Every("1s").Do(PostStats, devices, outputDriver)
 
 	if err != nil {
-		return
+		zap.S().Fatalf("%v", err)
 	}
 
 	scheduler.StartBlocking()

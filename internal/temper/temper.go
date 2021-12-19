@@ -3,13 +3,13 @@ package temper
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 
 	"github.com/FedoraTipper/gotemper/internal/system"
+	"go.uber.org/zap"
 )
 
 type TemperStats struct {
@@ -22,7 +22,7 @@ type TemperDriver interface {
 
 func readFileAndClean(filepath string) (string, error) {
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		log.Printf("File %s doesn't exist, returning nil err to skip", filepath)
+		zap.S().Debugf("File %s doesn't exist, returning nil err to skip", filepath)
 		return "", nil
 	}
 
@@ -111,16 +111,20 @@ func FindTemperDevices() ([]TemperDevice, error) {
 			err = usbDetails.addTemperDriver()
 
 			if err != nil {
-				log.Println(err) // should be warning
-				log.Println("Skipping...")
+				zap.S().Warn(err)
+				zap.S().Warn("Skipping...")
 				continue
 			}
+
+			zap.S().Infow("Temper device found", "USB Details", usbDetails)
 
 			devPaths, err := system.FindDevPaths(devPath, map[string]string{})
 
 			if err != nil {
 				return nil, err
 			}
+
+			zap.S().Infow("Dev paths found for device", "USB Details", usbDetails, "Dev Paths", devPaths)
 
 			devices = append(devices, TemperDevice{
 				Details:     *usbDetails,

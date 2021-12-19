@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	configModels "github.com/FedoraTipper/gotemper/internal/models/config"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
+	"go.uber.org/zap"
 )
 
 type InfluxDBDriver struct {
@@ -34,6 +34,8 @@ func (i *InfluxDBDriver) Initialise(outputConfig configModels.OutputDriverConfig
 		return errors.New(fmt.Sprintf("Unable to ping InfluxDB instance %s", config.ServerAddress))
 	}
 
+	zap.S().Debugw("InfluxDB output initialised")
+
 	return nil
 }
 
@@ -41,6 +43,7 @@ func (i *InfluxDBDriver) PostStats(label, sublabel string, payload interface{}) 
 	api := *i.api
 
 	go func() {
+		zap.S().Debugw("Posting stats", "label", label, "sublabel", sublabel, "payload", payload)
 		point := influxdb2.NewPointWithMeasurement(label).AddField(sublabel, payload)
 		api.WritePoint(point)
 		api.Flush()
@@ -48,7 +51,7 @@ func (i *InfluxDBDriver) PostStats(label, sublabel string, payload interface{}) 
 
 	select {
 	case err := <-api.Errors():
-		log.Printf("%v", err)
+		zap.S().Errorw("Error when posting stats to influxdb", "Error", err)
 		break
 	}
 }

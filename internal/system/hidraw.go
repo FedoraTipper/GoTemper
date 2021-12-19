@@ -3,11 +3,11 @@ package system
 import (
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"syscall"
 
 	"github.com/FedoraTipper/gotemper/internal/constants"
+	"go.uber.org/zap"
 )
 
 const (
@@ -26,11 +26,14 @@ func (h *HIDRawDriver) Open(filePath string) error {
 		return err
 	}
 
+	zap.S().Infow("Successfully opened file descriptor", "fd", h.fd, "File Path", filePath)
+
 	h.fd = fd
 	return nil
 }
 
 func (h *HIDRawDriver) Write(payload []byte) error {
+	zap.S().Debugw("Beginning syscall write", "payload length (bytes)", len(payload))
 	bytesWritten, err := syscall.Write(h.fd, payload)
 
 	if err != nil {
@@ -47,6 +50,7 @@ func (h *HIDRawDriver) Write(payload []byte) error {
 func (h *HIDRawDriver) Read() ([]byte, error) {
 	buffer := make([]byte, 8, 8)
 
+	zap.S().Debugf("Beginning syscall read of %d", h.fd)
 	for {
 		bytesRead, err := syscall.Read(h.fd, buffer)
 
@@ -56,6 +60,7 @@ func (h *HIDRawDriver) Read() ([]byte, error) {
 		}
 
 		if bytesRead > 0 {
+			zap.S().Debugf("Bytes read from syscall (len: %d)", bytesRead)
 			break
 		}
 	}
@@ -67,7 +72,6 @@ func (h *HIDRawDriver) Close() {
 	err := syscall.Close(h.fd)
 
 	if err != nil {
-		log.Printf("Unable to close file descriptor %d", h.fd)
-		log.Println(err)
+		zap.S().Errorw("Unable to close file descriptor", "fd", h.fd, "Error", err)
 	}
 }
